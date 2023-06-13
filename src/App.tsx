@@ -8,6 +8,7 @@ import './App.css';
  */
 interface IState {
   data: ServerRespond[],
+  showGraph: boolean,
 }
 
 /**
@@ -22,25 +23,40 @@ class App extends Component<{}, IState> {
       // data saves the server responds.
       // We use this state to parse data down to the child element (Graph) as element property
       data: [],
+      // showGraph is a boolean to indicate whether the Graph react element should be shown
+      showGraph: false,
     };
   }
 
   /**
-   * Render Graph react component with state.data parse as property data
+   * Render Graph react component with state.data parse as property data if showGraph is true
    */
   renderGraph() {
-    return (<Graph data={this.state.data}/>)
+    if (this.state.showGraph) {
+      return (<Graph data={this.state.data}/>)
+    }
   }
 
   /**
    * Get new data from server and update the state with the new data
    */
   getDataFromServer() {
-    DataStreamer.getData((serverResponds: ServerRespond[]) => {
-      // Update the state by creating a new array of data that consists of
-      // Previous data in the state and the new data from server
-      this.setState({ data: [...this.state.data, ...serverResponds] });
-    });
+    let counter = 0;
+    const delay = 500;
+    const interval = setInterval(() => {
+      DataStreamer.getData((serverResponds: ServerRespond[]) => {
+        this.setState({
+          data: serverResponds,
+          showGraph: true,
+        });
+      });
+      counter++;
+      // if counter is greater than 1000, reset the intervalIDs for performance
+      if (counter > 1000) {
+        clearInterval(interval);
+      }
+    }, delay);
+
   }
 
   /**
